@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Player {
+  id        String   @id @default(cuid())
+  name      String
+  emoji     String   @default("🏅")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Schiaccia 7
+  schiacciaParticipations SchiacciaSette_Participant[]
+
+  // Ping Pong Singles
+  singlesAsPlayer1 PingPongSingles[] @relation("Singles_P1")
+  singlesAsPlayer2 PingPongSingles[] @relation("Singles_P2")
+  singlesAsWinner  PingPongSingles[] @relation("Singles_Winner")
+
+  // Ping Pong Doubles
+  doublesTeam1A PingPongDoubles[] @relation("Doubles_T1A")
+  doublesTeam1B PingPongDoubles[] @relation("Doubles_T1B")
+  doublesTeam2A PingPongDoubles[] @relation("Doubles_T2A")
+  doublesTeam2B PingPongDoubles[] @relation("Doubles_T2B")
+}
+
+model SchiacciaSette {
+  id           String                      @id @default(cuid())
+  participants SchiacciaSette_Participant[]
+  playedAt     DateTime                    @default(now())
+  createdAt    DateTime                    @default(now())
+}
+
+model SchiacciaSette_Participant {
+  id       String         @id @default(cuid())
+  matchId  String
+  playerId String
+  isWinner Boolean        @default(false)
+  match    SchiacciaSette @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player   Player         @relation(fields: [playerId], references: [id])
+
+  @@unique([matchId, playerId])
+}
+
+model PingPongSingles {
+  id        String   @id @default(cuid())
+  player1Id String
+  player2Id String
+  winnerId  String
+  score1    Int
+  score2    Int
+  player1   Player   @relation("Singles_P1", fields: [player1Id], references: [id])
+  player2   Player   @relation("Singles_P2", fields: [player2Id], references: [id])
+  winner    Player   @relation("Singles_Winner", fields: [winnerId], references: [id])
+  playedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+}
+
+model PingPongDoubles {
+  id             String   @id @default(cuid())
+  team1PlayerAId String
+  team1PlayerBId String
+  team2PlayerAId String
+  team2PlayerBId String
+  winnerTeam     Int // 1 or 2
+  score1         Int
+  score2         Int
+  team1PlayerA   Player   @relation("Doubles_T1A", fields: [team1PlayerAId], references: [id])
+  team1PlayerB   Player   @relation("Doubles_T1B", fields: [team1PlayerBId], references: [id])
+  team2PlayerA   Player   @relation("Doubles_T2A", fields: [team2PlayerAId], references: [id])
+  team2PlayerB   Player   @relation("Doubles_T2B", fields: [team2PlayerBId], references: [id])
+  playedAt       DateTime @default(now())
+  createdAt      DateTime @default(now())
+}
